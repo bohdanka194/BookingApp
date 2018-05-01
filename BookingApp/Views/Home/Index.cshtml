@@ -1,24 +1,165 @@
-﻿<div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS, and JavaScript.</p>
-    <p><a href="https://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
+﻿<div id="tableBlock"></div>
+<div id="editBlock">
+    <p><b>Editing book</b></p>
+    <table>
+        <tr>
+            <td>
+                <input type="hidden" id="editId" />
+            </td>
+            <td></td>
+        </tr>
+        <tr><td><label>Name: </label></td><td><input type="text" id="editName" /></td></tr>
+        <tr><td><label>Author: </label></td> <td><input type="text" id="editAuthor" /></td></tr>
+        <tr><td><label>Year: </label></td><td><input type="number" id="editYear" /></td></tr>
+    </table>
+    <button id="EditBook">Save editing</button>
 </div>
-<div class="row">
-    <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>ASP.NET Web API is a framework that makes it easy to build HTTP services that reach
-        a broad range of clients, including browsers and mobile devices. ASP.NET Web API
-        is an ideal platform for building RESTful applications on the .NET Framework.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301870">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301871">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301872">Learn more &raquo;</a></p>
-    </div>
+<div id="createBook">
+    <p><b>Add book</b></p>
+    <table>
+        <tr><td><input type="hidden" id="editId" /></td><td></td></tr>
+        <tr><td><label>Name: </label></td><td><input type="text" id="addName" /></td></tr>
+        <tr><td><label>Author: </label></td><td><input type="text" id="addAuthor" /></td></tr>
+        <tr><td><label>Year:</label></td><td><input type="number" id="addYear" /></td></tr>
+    </table>
+    <button id="AddBook">Save adding</button>
 </div>
+
+
+@section scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function ()){
+            GetAllBooks();
+            $("#editBook").click(function (event) {
+                event.preventDefault();
+                EditBook();
+            });
+
+            $("#addBook").click(function (event){
+                event.preventDefault();
+                AddBook();
+            });
+        }
+        //ajax-request
+        function GetAllBooks() {
+
+            $("#createBlock").css('display', 'block');
+            $("#editBlock").css('display', 'none');
+            $.ajax({
+                url: '/api/values',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    WriteResponse(data);
+                },
+                error: function (x, y, z) {
+                    alert(x + '\n' + y + '\n' + z);
+                }
+            });
+        }
+        //add new book
+        function AddBook() {
+            var book = {
+                Name: $('#addName').val(),
+                Author: $('#addAuthor').val(),
+                Year: $('addYear').val()
+            };
+
+            $.ajax({
+                url: '/api/values/',
+                type: 'POST',
+                data: JSON.stringify(book),
+                contentType: "application/json;charset=utf-8",
+                success: function (data) {
+                    GetAllBooks();
+                },
+                error: function (x, y, z) {
+                    alert(x + '\n' + y + '\n' + z);
+                }
+            });
+        }
+        // delete book
+        function DeleteBook(id) {
+            $.ajax({
+                url: '/api/values/' + id,
+                type: 'DELETE',
+                contentType: "application/json;charset=utf-8",
+                success: function (data) {
+                    GetAllBooks();
+                },
+                error: function (x, y, z) {
+                    alert(x + '\n' + y + '\n' + z);
+                }
+            });
+        }
+        //edit book
+        function EditBook(id) {
+            var id = $("#editId").val();
+
+            var book = {
+                Id: $("#editId").val(),
+                Name: $("#editName").val(),
+                Author: $("#editAuthor").val(),
+                Year: $("#editYear").val()
+            };
+
+            $.ajax({
+                url: '/api/values/' + id;
+                type: 'PUT',
+                data: JSON.stringify(book),
+                contentType: "application/json;charset=utf-8",
+                success: function (data) {
+                    GetAllBooks();
+                },
+                error: function (x, y, z) {
+                    alert(x + '\n' + y + '\n' + z);
+                }
+            });
+        }
+        //output data from response
+        function WriteResponse(books) {
+            var strResult = "<table><th>ID</th><th>Назва</th><th>Aвтор</th><th>Рік видання</th>";
+            $.each(book, function (index, book) {
+                strResult += "<tr><td>" + book.Id + "</td><td>" + book.Name + "</td><td>" + book.Author +
+                    "</td><td>" + book.Year + "</td><td><a id='editItem' data-item='" + book.Id +
+                    "'onclick='EditItem(this);' >Редагувати </a></td>" + "<td><a id='delItem'> data-item='" +
+                    book.Id + "'onclick='DeleteItem(this);'>Видалити</a></td></tr>";
+            });
+            strResult += "</table>";
+            $("#tableBlock").html(strResult);
+        }
+
+        function DeleteItem(el) {
+            var id = $(el).attr('data-item');
+            GetBook(id);
+        }
+
+        function ShowBook(book) {
+            if (book != null) {
+                $("#createBlock").css('display', 'none');
+                $("#editBlock").css('display', 'block');
+                $("#editId").val(book.Id);
+                $("#editName").val(book.Name);
+                $("#editAuthor").val(book.Author);
+                $("#editYear").val(book.Year);
+            }
+            else {
+                alert("Така книга не існує");
+            }
+        }
+
+        function GetBook(id) {
+            $.ajax({
+                url: 'api/values/' + id,
+                type: 'GET',
+                success: function (data) {
+                    ShowBook(data);
+                },
+                error: function (x, y, z) {
+                    alert(x + '\n' + y + '\n' + z);
+                }
+            });
+        }
+    </script>
+}

@@ -10,7 +10,7 @@ namespace BookingApp.Controllers
     {
         public ActionResult Index()
         {
-            ViewBag.Title = "Home Page";
+            ViewBag.Title = "Home Page234242424342342";
 
             return View();
         }
